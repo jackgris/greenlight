@@ -20,10 +20,12 @@ type ModelData interface {
 
 type Models struct {
 	Movies ModelData
+	Users  UserModel
 }
 
 func NewModels(db *sql.DB) Models {
 	return Models{
 		Movies: MovieModel{DB: db},
+		Users:  UserModel{DB: db},
 	}
 }
