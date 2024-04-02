@@ -19,15 +19,17 @@ type ModelData interface {
 }
 
 type Models struct {
-	Movies ModelData
-	Tokens TokenModel
-	Users  UserModel
+	Movies      ModelData
+	Permissions PermissionsModel
+	Tokens      TokenModel
+	Users       UserModel
 }
 
 func NewModels(db *sql.DB) Models {
 	return Models{
-		Movies: MovieModel{DB: db},
-		Tokens: TokenModel{DB: db},
-		Users:  UserModel{DB: db},
+		Movies:      MovieModel{DB: db},
+		Permissions: PermissionsModel{DB: db},
+		Tokens:      TokenModel{DB: db},
+		Users:       UserModel{DB: db},
 	}
 }
