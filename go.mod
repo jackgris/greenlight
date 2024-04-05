@@ -10,6 +10,7 @@ require (
 require golang.org/x/time v0.5.0
 
 require (
+	github.com/felixge/httpsnoop v1.0.2
 	github.com/go-mail/mail/v2 v2.3.0
 	golang.org/x/crypto v0.21.0
 )
