@@ -12,7 +12,7 @@ import (
 
 	"github.com/felixge/httpsnoop"
 	"github.com/jackgris/greenlight/internal/data"
-	"github.com/jackgris/greenlight/internal/validator"
+	"github.com/pascaldekloe/jwt"
 	"github.com/tomasen/realip"
 	"golang.org/x/time/rate"
 )
@@ -104,14 +104,41 @@ func (app *application) authenticate(next http.Handler) http.Handler {
 
 		token := headerParts[1]
 
-		v := validator.New()
+		// v := validator.New()
 
-		if data.ValidateTokenPlaintext(v, token); !v.Valid() {
-			app.invalidCredentialResponse(w, r)
+		// if data.ValidateTokenPlaintext(v, token); !v.Valid() {
+		// 	app.invalidCredentialResponse(w, r)
+		// 	return
+		// }
+		claims, err := jwt.HMACCheck([]byte(token), []byte(app.config.jwt.secret))
+		if err != nil {
+			app.invalidAuthenticationTokenResponse(w, r)
 			return
 		}
 
-		user, err := app.models.Users.GetForToken(data.ScopeAuthentication, token)
+		if !claims.Valid(time.Now()) {
+			app.invalidAuthenticationTokenResponse(w, r)
+			return
+		}
+
+		if claims.Issuer != "greenlight.alexedwards.net" {
+			app.inactiveAccountResponse(w, r)
+			return
+		}
+
+		if !claims.AcceptAudience("greenlight.alexedwards.net") {
+			app.invalidAuthenticationTokenResponse(w, r)
+			return
+		}
+
+		userID, err := strconv.ParseInt(claims.Subject, 10, 64)
+		if err != nil {
+			app.serverErrorResponse(w, r, err)
+			return
+		}
+
+		// user, err := app.models.Users.GetForToken(data.ScopeAuthentication, token)
+		user, err := app.models.Users.Get(userID)
 		if err != nil {
 			switch {
 			case errors.Is(err, data.ErrRecordNotFound):
